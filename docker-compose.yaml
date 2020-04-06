@@ -1,0 +1,39 @@
+version: '3'
+services:
+  db:
+    image: mysql:5.7
+    container_name: mysql_db
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_USER: "${MYSQL_USER}"
+      MYSQL_PASSWORD: "${MYSQL_PASSWORD}"
+      MYSQL_DATABASE: "${MYSQL_DATABASE}"
+      MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
+    hostname: mysql_db
+    restart: always
+    volumes:
+      - mlruns:/var/lib/mysql
+  mlflow:
+    build: .
+    container_name: mlflow
+    ports:
+      - "5000:80"
+    depends_on:
+      - db
+    restart: always
+    volumes:
+      - ${CREDENTIALS_PATH}:/opt/application_default_credentials.json
+    environment:
+      DB_URI: mysql+mysqldb://${MYSQL_USER}:${MYSQL_PASSWORD}@mysql_db:3306/${MYSQL_DATABASE}
+      GCP_STORAGE_BUCKET: "${GCP_STORAGE_BUCKET}"
+      GOOGLE_APPLICATION_CREDENTIALS: /opt/application_default_credentials.json
+      GCLOUD_PROJECT: ${GCLOUD_PROJECT}
+      AZURE_STROAGE_BUCKET: "${AZURE_STROAGE_BUCKET}"
+      AZURE_STORAGE_CONNECTION_STRING: "${AZURE_STORAGE_CONNECTION_STRING}"
+      AWS_STORAGE_BUCKET: "${AWS_STORAGE_BUCKET}"
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY}
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID}
+
+volumes:
+  mlruns:
